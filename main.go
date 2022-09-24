@@ -13,6 +13,8 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"path/filepath"
+	"strings"
 )
 
 type S3Info struct {
@@ -71,14 +73,22 @@ func (s *S3Info) SetS3ConfigByKey() error {
 }
 
 func (s *S3Info) UploadFile(file io.Reader, filename, preFix string) *manager.UploadOutput {
+	fileType := "image/" + findExtension(filename)
 	uploader := manager.NewUploader(s.S3Client)
 	result, err := uploader.Upload(context.TODO(), &s3.PutObjectInput{
-		Bucket: aws.String(s.BucketName),
-		Key:    aws.String(filename),
-		Body:   file,
+		Bucket:      aws.String(s.BucketName),
+		Key:         aws.String(filename),
+		Body:        file,
+		ContentType: &fileType,
 	})
 	if err != nil {
 		log.Fatal(err)
 	}
+	return result
+}
+
+func findExtension(path string) string {
+	ext := filepath.Ext(path)
+	_, result, _ := strings.Cut(ext, ".")
 	return result
 }
