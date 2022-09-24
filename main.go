@@ -13,6 +13,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"path/filepath"
 	"strings"
 )
@@ -50,11 +51,28 @@ func init() {
 }
 
 func main() {
-	reader, err := ioutil.ReadFile("./resources/INfo.png")
+	//reader, err := ioutil.ReadFile("./resources/INfo.png")
+	//if err != nil {
+	//	log.Fatalln(err.Error())
+	//}
+	res, err := http.Get("https://postfiles.pstatic.net/MjAyMjA0MDRfMjAy/MDAxNjQ5MDY2MDY3MTUw.22jLgHl_oh3zJtif3QuD4qKaz96MMq8AQ6VBxW_d_Jkg.vkHSQE7PR_6Q4zkV7jxXsFo1ct79V0TRwZIxl0TdTl4g.JPEG.dsmhs2022/02.jpg?type=w773")
 	if err != nil {
-		log.Fatalln(err.Error())
+		panic(err)
 	}
-	s3Client.UploadFile(bytes.NewReader(reader), "Info.png", "")
+
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+
+		}
+	}(res.Body)
+
+	reader, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	s3Client.UploadFile(bytes.NewReader(reader), "test.png", "")
 
 }
 
@@ -84,6 +102,7 @@ func (s *S3Info) UploadFile(file io.Reader, filename, preFix string) *manager.Up
 	if err != nil {
 		log.Fatal(err)
 	}
+	println(result.Location)
 	return result
 }
 
